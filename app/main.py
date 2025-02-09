@@ -1,6 +1,8 @@
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi import FastAPI
-from app.routes import train, predict
+from routes import training
+from routes import predict, data_file, tunning, testing
 
 app = FastAPI(
     title="XGBoost with FastAPI",
@@ -8,8 +10,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Configure CORS
+origins = [
+    "http://localhost:5173",  # for example, react local dev server url
+    "http://127.0.0.0:8000"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,          # allows the specified origins
+    allow_credentials=True,
+    allow_methods=["*"],            # allows all methods (GET, POST, etc.)
+    allow_headers=["*"],            # allows all headers
+)
+
 # Incluir routers
-app.include_router(train.router, prefix="/train", tags=["Entrenamiento"])
+app.include_router(data_file.router, prefix="/data", tags=["Data"])
+app.include_router(tunning.router, prefix="/parameters", tags=["Parámetros"])
+app.include_router(training.router, prefix="/train", tags=["Entrenamiento"])
+app.include_router(testing.router, prefix="/test", tags=["Testing"])
 app.include_router(predict.router, prefix="/predict", tags=["Predicción"])
 
 @app.get("/")

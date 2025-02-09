@@ -97,4 +97,5 @@ def custom_objective_factory(distribution: str):
             grad[np.arange(rows), labels.astype(int)] -= 1.0
             hess = adjusted_preds * (1.0 - adjusted_preds)
         return grad, hess
+    
     return custom_objective

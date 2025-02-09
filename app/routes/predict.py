@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.models.xgboost_model import predict_with_model, evaluate_model
-from app.schemas.models import PredictRequest, PredictResponse, EvaluateRequest, EvaluateResponse
+from models.xgboost_model import predict_with_model, evaluate_model
+from schemas.models import PredictRequest, PredictResponse, EvaluateRequest, EvaluateResponse
 
 router = APIRouter()
 
