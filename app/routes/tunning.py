@@ -22,7 +22,7 @@ class ParameterSelectionResponse(BaseModel):
 async def grid_search(request: GridSearchRequest):
     # try:
     #     best_params = grid_search_xgboost(request.model_path, request.data_path)
-    #     return {"best_parameters": best_params}
+    #     return {"best_parameters": best_params}>
     # except Exception as e:
     #     raise HTTPException(status_code=500, detail=str(e))
     pass

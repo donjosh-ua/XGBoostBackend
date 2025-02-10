@@ -1,4 +1,5 @@
 import os
+import base64
 import numpy as np
 import xgboost as xgb
 from fastapi import APIRouter, HTTPException
@@ -11,7 +12,8 @@ router = APIRouter()
 def test_models_plots():
     """
     Evaluates both normal and custom XGBoost models, generates evaluation plots,
-    label distributions and confusion matrices and saves them in the data/plots folder.
+    label distributions and confusion matrices, saves them in the data/plots folder,
+    and returns the base64 encoded images so that the frontend can render and store them.
     """
     # Compute plots folder (create if not exists)
     BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
@@ -21,8 +23,6 @@ def test_models_plots():
 
     num_classes = get_number_of_classes()
     is_multiclass = num_classes > 2
-
-    print("Number of classes:", num_classes)
 
     # Load data from CSV
     dtrain, dtest, train_x, train_y, test_x, test_y = load_data_from_csv()
@@ -51,13 +51,31 @@ def test_models_plots():
     custom_metrics_path = os.path.join(plots_dir, "display_metrics_custom.png")
     distribution_path = os.path.join(plots_dir, "label_distribution_side_by_side.png")
     confusion_path = os.path.join(plots_dir, "confusion_matrices.png")
+    accuracies_path = os.path.join(plots_dir, "accuracies.png")
 
     display_metrics(normal_preds, test_y, is_multiclass, title="Normal XGBoost", output_path=normal_metrics_path)
     display_metrics(custom_preds, test_y, is_multiclass, title="Bayesian Objective", output_path=custom_metrics_path)
     plot_label_distributions_side_by_side(test_y, normal_preds, custom_preds, output_path=distribution_path)
     show_confusion_matrices_side_by_side(test_y, normal_preds, custom_preds, output_path=confusion_path)
 
+    def load_image_as_base64(file_path: str) -> str:
+        with open(file_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode('utf-8')
+
+    # Convert saved images to base64 encoded strings.
+    normal_metrics_b64 = load_image_as_base64(normal_metrics_path)
+    custom_metrics_b64 = load_image_as_base64(custom_metrics_path)
+    distribution_b64 = load_image_as_base64(distribution_path)
+    confusion_b64 = load_image_as_base64(confusion_path)
+    accuracies_b64 = load_image_as_base64(accuracies_path)
+
     return {
-        "message": "Testing plots generated and saved successfully",
-        "plots_folder": plots_dir
+        "message": "Testing plots generated, saved, and encoded successfully",
+        "images": {
+            "metrics_normal": normal_metrics_b64,
+            "metrics_custom": custom_metrics_b64,
+            "distribution": distribution_b64,
+            "confusion": confusion_b64,
+            "accuracies": accuracies_b64
+        }
     }

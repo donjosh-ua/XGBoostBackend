@@ -1,6 +1,7 @@
 import os
 from fastapi import APIRouter, HTTPException
 from models.xgboost_model import train_normal_xgboost, train_custom_xgboost
+from utils.common_methods import plot_accuracy_lines_and_curves
 from schemas.models import TrainResponse
 from pydantic import BaseModel
 from utils import conf_manager
@@ -44,7 +45,7 @@ async def train_normal_model(request: TrainRequest):
         # Retrieve model parameters from the settings file
         model_params = conf_manager.get_value("model_parameters")
         
-        model, evals_result = train_normal_xgboost(data_path, model_params, request.method)
+        _, evals_result = train_normal_xgboost(data_path, model_params, request.method)
         
         print("Model trained successfully")
         return {"message": "Modelo entrenado exitosamente"}
@@ -73,7 +74,7 @@ async def train_custom_model(request: TrainRequest):
         
         if request.method.lower() != "split":
             raise HTTPException(status_code=400, detail="El entrenamiento custom solo está soportado con el método 'split'.")
-        model, evals_result = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
+        _, evals_result = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
         
         return {"message": "Modelo entrenado exitosamente"}
     except Exception as e:
@@ -98,8 +99,17 @@ async def train_both_models(request: TrainRequest):
         # Retrieve custom parameters from the settings file
         model_params = conf_manager.get_value("model_parameters")
         
-        model1, evals_result1 = train_normal_xgboost(data_path, model_params, request.method)
-        model2, evals_result2 = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
+        _, normal_results = train_normal_xgboost(data_path, model_params, request.method)
+        _, custom_results = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
+
+        BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+        plots_dir = os.path.join(BASE_DIR, "plots")
+        if not os.path.exists(plots_dir):
+            os.makedirs(plots_dir)
+            
+        plot_path = os.path.join(plots_dir, "accuracies.png")
+
+        plot_accuracy_lines_and_curves(normal_results, custom_results, plot_path)
         
         return {"message": "Modelos entrenados exitosamente"}
     except Exception as e:

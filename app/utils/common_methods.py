@@ -1,10 +1,10 @@
 import pandas as pd
-from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
-                                confusion_matrix, ConfusionMatrixDisplay)
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay)
 import matplotlib.pyplot as plt
 import numpy as np
 from utils import conf_manager
 
+plt.switch_backend('agg')
 
 def get_number_of_classes():
     """Obtener el número de clases del archivo cargado."""
@@ -17,6 +17,7 @@ def get_number_of_classes():
     data = pd.read_csv(loaded_path, header=header)
     
     return len(data.iloc[:, -1].unique())
+
 
 def display_metrics(preds: np.ndarray, test_y: np.ndarray, is_multiclass: bool, title: str = "Métricas de Rendimiento", output_path: str = None):
     """Genera una figura con métricas de rendimiento y la guarda en output_path."""
@@ -73,6 +74,7 @@ def plot_label_distributions_side_by_side(true_labels: np.ndarray,
         plt.savefig(output_path)
     plt.close(fig)
 
+
 def show_confusion_matrices_side_by_side(true_labels: np.ndarray,
                                          normal_preds: np.ndarray,
                                          adjusted_preds: np.ndarray,
@@ -93,3 +95,47 @@ def show_confusion_matrices_side_by_side(true_labels: np.ndarray,
     if output_path:
         plt.savefig(output_path)
     plt.close(fig)
+
+def plot_accuracy_lines_and_curves(normal_evals_result, custom_evals_result, output_path: str = None):
+    """
+    Muestra dos curvas de precisión de entrenamiento (Normal y Bayesiano)
+    y dos líneas horizontales con la precisión final de test (Normal y Bayesiano),
+    y guarda el gráfico en output_path si se proporciona.
+    """
+    is_multiclass = get_number_of_classes() > 2
+    metric = 'merror' if is_multiclass else 'error'
+
+    # Entrenamiento
+    normal_train_err = normal_evals_result['train'][metric]
+    custom_train_err = custom_evals_result['train'][metric]
+    normal_train_acc = [1.0 - e for e in normal_train_err]
+    custom_train_acc = [1.0 - e for e in custom_train_err]
+
+    # Test
+    normal_test_err = normal_evals_result['test'][metric]
+    custom_test_err = custom_evals_result['test'][metric]
+    normal_final_test_acc = 1.0 - normal_test_err[-1]
+    custom_final_test_acc = 1.0 - custom_test_err[-1]
+
+    rounds = range(len(normal_train_acc))
+
+    plt.figure(figsize=(8, 6))
+
+    # Curvas de training accuracy
+    plt.plot(rounds, normal_train_acc, label='Normal Accuracy', color='blue')
+    plt.plot(rounds, custom_train_acc, label='Bayesian Accuracy', color='red')
+
+    # Líneas horizontales con la precisión final de test
+    plt.axhline(y=normal_final_test_acc, color='blue', linestyle='--', label='Normal Test Accuracy')
+    plt.axhline(y=custom_final_test_acc, color='red', linestyle='--', label='Bayesian Test Accuracy')
+
+    plt.xlabel('Boost Rounds')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracies')
+    plt.legend()
+    plt.grid(True)
+    plt.ylim(0, 1)
+
+    if output_path:
+        plt.savefig(output_path)
+    plt.close()

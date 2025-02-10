@@ -26,7 +26,7 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
             params,
             dtrain,
             num_boost_round=rounds,
-            evals=[(dtest, "test")],
+            evals=[(dtrain, 'train'), (dtest, 'test')],
             evals_result=evals_result
         )
         model.save_model("app/model_normal.xgb")
@@ -73,7 +73,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
             dtrain,
             num_boost_round=rounds,
             obj=custom_obj,
-            evals=[(dtest, "test")],
+            evals=[(dtrain, 'train'), (dtest, 'test')],
             evals_result=evals_result
         )
         model.save_model("app/model_custom.xgb")
