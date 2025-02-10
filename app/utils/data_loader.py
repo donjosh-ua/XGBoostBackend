@@ -1,16 +1,46 @@
 import pandas as pd
 import xgboost as xgb
 
-def load_data_from_csv(data_path: str, header=None):
+import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from utils import conf_manager
+
+def load_data_from_csv() -> tuple:
     """
-    Carga datos desde un archivo CSV y los convierte en DMatrix.
+    Load data from the CSV file specified in the settings file and split it into training and test sets.
+    The settings file should provide:
+      - "loaded_data_path": full path to the CSV file.
+      - "train_ratio": a float (e.g. 0.7 for 70% training data).
+      - "seed": a random seed for reproducibility.
+    If any of these values are not set, defaults are used.
     """
-    data = pd.read_csv(data_path, header=header)
+    datafile = conf_manager.get_value("loaded_data_path")
+    if not datafile:
+        print("No data file loaded. Please load a data file first using the /load endpoint.")
     
+    # Load train_ratio and seed from settings, with defaults if not set.
+    train_ratio = conf_manager.get_value("training_value")
+    if train_ratio is None:
+        train_ratio = 0.7  # default training ratio
+    
+    header = conf_manager.get_value("has_header")
+    if header is not None:
+        header = 0  # default header
+
+    seed = conf_manager.get_value("seed")
+    if seed is None:
+        seed = 42  # default random seed
+
+    data = pd.read_csv(datafile, header=header, sep=conf_manager.get_value("separator"))
     X = data.iloc[:, :-1].values
     y = data.iloc[:, -1].values
-    
-    dtrain = xgb.DMatrix(X, label=y)
-    dtest = xgb.DMatrix(X, label=y)  # Usamos los mismos datos para prueba
-    
-    return dtrain, dtest, X, y, X, y
+
+    train_x, test_x, train_y, test_y = train_test_split(
+        X, y, test_size=(1 - train_ratio), random_state=seed
+    )
+
+    dtrain = xgb.DMatrix(train_x, label=train_y)
+    dtest = xgb.DMatrix(test_x, label=test_y)
+
+    return dtrain, dtest, train_x, train_y, test_x, test_y

@@ -12,7 +12,7 @@ class TrainResponse(BaseModel):
     #message: str
     #evals_result: Dict[str, List[float]]
     message: str
-    evals_result: Dict[str, OrderedDict[str, List[float]]]  # Corrected type
+    # evals_result: Dict[str, OrderedDict[str, List[float]]]  # Corrected type
 
 class PredictRequest(BaseModel):
     model_path: str

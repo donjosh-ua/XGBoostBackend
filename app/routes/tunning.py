@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from models.xgboost_model import set_model_parameters
+from utils.common_methods import get_number_of_classes
+from utils import conf_manager
 
 router = APIRouter()
 
@@ -29,8 +30,28 @@ async def grid_search(request: GridSearchRequest):
 @router.post("/setparams", response_model=ParameterSelectionResponse)
 async def select_parameters(request: ParameterSelectionRequest):
     try:
-        # updated_params = set_model_parameters(request.parameters)
-        set_model_parameters(request.parameters)
+        # Retrieve the loaded data file path from settings
+        num_classes = get_number_of_classes()
+
+        # Copy initial parameters from the request
+        params = request.parameters.copy()
+
+        # Update parameters based on the number of classes
+        if num_classes > 2:
+            params.update({
+                'objective': 'multi:softmax',
+                'num_class': num_classes,
+                'eval_metric': 'merror'  # Metric for multiclass
+            })
+        else:
+            params.update({
+                'objective': 'binary:logistic',
+                'scale_pos_weight': 3,  # Adjustment for class imbalance
+                'eval_metric': 'error'  # Metric for binary classification
+            })
+
+        # Save parameters to the settings file
+        conf_manager.set_value("model_parameters", params)
         return {"message": "Parameters updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

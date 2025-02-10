@@ -11,10 +11,12 @@ DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 class TrainRequest(BaseModel):
     method: str  # "split" or "cv"
     value: int   # if method=="cv", value represents num_folds; for "split", a default is used
+    rounds: int  # number of rounds for custom training
     distribution: str = None  # used for custom training
     params: dict  # additional parameters if needed
 
 def get_selected_filepath() -> str:
+
     selected_file = conf_manager.get_value("selected_file")
     if not selected_file:
         raise HTTPException(status_code=400, detail="No file has been selected. Please select and load a data file first.")
@@ -33,14 +35,19 @@ async def train_normal_model(request: TrainRequest):
     """
     try:
         data_path = get_selected_filepath()
+
         # Save training method and value in the settings file
         conf_manager.set_value("training_method", request.method)
-        conf_manager.set_value("training_value", request.value)
+        value = request.value if request.method.lower() == "cv" else request.value/100
+        conf_manager.set_value("training_value", value)
+
+        # Retrieve model parameters from the settings file
+        model_params = conf_manager.get_value("model_parameters")
         
-        num_folds = request.value if request.method.lower() == "cv" else 5
-        model, evals_result = train_normal_xgboost(data_path, request.params, request.method, num_folds=num_folds)
+        model, evals_result = train_normal_xgboost(data_path, model_params, request.method)
         
-        return {"message": "Modelo entrenado exitosamente", "evals_result": evals_result}
+        print("Model trained successfully")
+        return {"message": "Modelo entrenado exitosamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -52,15 +59,48 @@ async def train_custom_model(request: TrainRequest):
     """
     try:
         data_path = get_selected_filepath()
+
         # Save training method and value in the settings file
         conf_manager.set_value("training_method", request.method)
-        conf_manager.set_value("training_value", request.value)
+        value = request.value if request.method.lower() == "cv" else request.value/100
+        conf_manager.set_value("training_value", value)
+        conf_manager.set_value("rounds", request.rounds)
+        conf_manager.set_value("distribution", request.distribution)
+        conf_manager.set_value("custom_parameters", request.params)
+
+        # Retrieve custom parameters from the settings file
+        model_params = conf_manager.get_value("model_parameters")
         
-        distribution = request.params.get("distribution", "Normal")
         if request.method.lower() != "split":
             raise HTTPException(status_code=400, detail="El entrenamiento custom solo está soportado con el método 'split'.")
-        model, evals_result = train_custom_xgboost(data_path, request.params, distribution, request.method)
+        model, evals_result = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
         
-        return {"message": "Modelo entrenado exitosamente", "evals_result": evals_result}
+        return {"message": "Modelo entrenado exitosamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/both", response_model=TrainResponse)
+async def train_both_models(request: TrainRequest):
+    """
+    Endpoint to train both normal and custom XGBoost models using the data file provided in settings.config.
+    """
+    try:
+        data_path = get_selected_filepath()
+
+        # Save training method and value in the settings file
+        conf_manager.set_value("training_method", request.method)
+        value = request.value if request.method.lower() == "cv" else request.value/100
+        conf_manager.set_value("training_value", value)
+        conf_manager.set_value("rounds", request.rounds)
+        conf_manager.set_value("distribution", request.distribution)
+        conf_manager.set_value("custom_parameters", request.params)
+
+        # Retrieve custom parameters from the settings file
+        model_params = conf_manager.get_value("model_parameters")
+        
+        model1, evals_result1 = train_normal_xgboost(data_path, model_params, request.method)
+        model2, evals_result2 = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
+        
+        return {"message": "Modelos entrenados exitosamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

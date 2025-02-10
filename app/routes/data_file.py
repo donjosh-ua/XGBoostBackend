@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from utils.common_methods import get_number_of_classes
 from utils import conf_manager 
 
 router = APIRouter()
@@ -58,8 +59,42 @@ def load_data_file(request: DataLoadRequest):
     header = 0 if request.has_header else None
     try:
         df = pd.read_csv(file_path, sep=request.separator, header=header)
-        # Optionally, store additional info in the config; for large data use other mechanisms
+        # Persist additional settings: file path, header info, and separator used.
         conf_manager.set_value("loaded_data_path", file_path)
+        conf_manager.set_value("has_header", request.has_header)
+        conf_manager.set_value("separator", request.separator)
+
+        # Retrieve the loaded data file path from settings
+        num_classes = get_number_of_classes()
+
+        # Copy initial parameters from the settings
+        params = conf_manager.get_value("model_parameters")
+
+        # Update parameters based on the number of classes with property adjustments
+        if num_classes > 2:
+            # Remove scale_pos_weight if exists
+            if 'scale_pos_weight' in params:
+                del params['scale_pos_weight']
+            # Update for multiclass
+            params.update({
+                'objective': 'multi:softmax',
+                'num_class': num_classes,
+                'eval_metric': 'merror'  # Metric for multiclass
+            })
+        else:
+            # Remove num_class if exists
+            if 'num_class' in params:
+                del params['num_class']
+            # Update for binary classification
+            params.update({
+                'objective': 'binary:logistic',
+                'scale_pos_weight': 3,  # Adjustment for class imbalance
+                'eval_metric': 'error'  # Metric for binary classification
+            })
+
+        # Save updated parameters to the settings file
+        conf_manager.set_value("model_parameters", params)
+
         preview = df.head(10).to_dict(orient="records")
         return {"message": f"File {request.filename} loaded successfully", "preview": preview}
     except Exception as e:
