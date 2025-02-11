@@ -7,7 +7,6 @@ from utils.common_methods import plot_accuracy_lines_and_curves
 from models.xgboost_model import train_normal_xgboost, train_custom_xgboost
 
 router = APIRouter()
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
 class TrainRequest(BaseModel):
     method: str  # "split" or "cv"
@@ -22,12 +21,12 @@ def get_selected_filepath() -> str:
     if not selected_file:
         raise HTTPException(status_code=400, detail="No file has been selected. Please select and load a data file first.")
     
-    # Use the loaded_data_path from settings if available, otherwise use DATA_DIR + selected_file
     loaded_data_path = conf_manager.get_value("loaded_data_path")
-    if loaded_data_path and os.path.isfile(loaded_data_path):
-        return loaded_data_path
-    
-    return os.path.join(DATA_DIR, selected_file)
+    if loaded_data_path and not os.path.isabs(loaded_data_path):
+        base_dir = os.path.abspath(os.curdir)
+        return os.path.join(base_dir, loaded_data_path)
+
+    return loaded_data_path
 
 @router.post("/normal", response_model=TrainResponse)
 async def train_normal_model(request: TrainRequest):

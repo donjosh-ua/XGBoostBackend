@@ -13,7 +13,6 @@ app = FastAPI(
 # Configure CORS
 origins = [
     "http://localhost:5173",    # frontend url
-    "http://127.0.0.0:8000"     
 ]
 
 app.add_middleware(
@@ -36,4 +35,4 @@ def read_root():
     return {"message": "Bienvenido a la API de XGBoost con FastAPI"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.0", port=8000)
+    uvicorn.run("main:app", host="localhost", port=8000, reload=True)

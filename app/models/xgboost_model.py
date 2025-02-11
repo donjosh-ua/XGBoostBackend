@@ -129,26 +129,6 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
         raise ValueError("Método de entrenamiento inválido. Use 'split' o 'cv'.")
 
 
-def cross_validate(X: np.ndarray, y: np.ndarray, params: dict, n_splits: int = 5, is_multiclass: bool = False):
-    """
-    Realiza validación cruzada usando el modelo XGBoost con la función de pérdida personalizada.
-    Muestra métricas de exactitud, precisión, recall y F1 en formato de tabla.
-    """
-
-    kf = KFold(n_splits=n_splits, shuffle=True, random_state=kSeed)
-
-    for train_index, test_index in kf.split(X):
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-
-        # Crear matrices de XGBoost
-        dtrain_fold = xgb.DMatrix(X_train, label=y_train)
-        dtest_fold = xgb.DMatrix(X_test, label=y_test)
-
-        # Entrenar con la función de pérdida personalizada
-        custom_booster, _ = train_custom_xgboost(dtrain_fold, dtest_fold, params)
-
-
 def predict_with_model(model_path: str, data_path: str):
     """
     Realiza predicciones con un modelo XGBoost.
