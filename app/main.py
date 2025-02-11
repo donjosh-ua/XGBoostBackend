@@ -1,7 +1,7 @@
-from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi import FastAPI
 from routes import training
+from fastapi.middleware.cors import CORSMiddleware
 from routes import predict, data_file, tunning, testing
 
 app = FastAPI(

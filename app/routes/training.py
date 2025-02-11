@@ -1,10 +1,10 @@
 import os
-from fastapi import APIRouter, HTTPException
-from models.xgboost_model import train_normal_xgboost, train_custom_xgboost
-from utils.common_methods import plot_accuracy_lines_and_curves
-from schemas.models import TrainResponse
 from pydantic import BaseModel
 from utils import conf_manager
+from schemas.models import TrainResponse
+from fastapi import APIRouter, HTTPException
+from utils.common_methods import plot_accuracy_lines_and_curves
+from models.xgboost_model import train_normal_xgboost, train_custom_xgboost
 
 router = APIRouter()
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
@@ -96,7 +96,6 @@ async def train_both_models(request: TrainRequest):
         conf_manager.set_value("distribution", request.distribution)
         conf_manager.set_value("custom_parameters", request.params)
 
-        # Retrieve custom parameters from the settings file
         model_params = conf_manager.get_value("model_parameters")
         
         _, normal_results = train_normal_xgboost(data_path, model_params, request.method)

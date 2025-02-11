@@ -2,9 +2,9 @@ import os
 import base64
 import numpy as np
 import xgboost as xgb
-from fastapi import APIRouter, HTTPException
 from utils.common_methods import *
-from utils.data_loader import load_data_from_csv
+from utils.data_loader import gen_test_data
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
@@ -24,10 +24,8 @@ def test_models_plots():
     num_classes = get_number_of_classes()
     is_multiclass = num_classes > 2
 
-    # Load data from CSV
-    dtrain, dtest, train_x, train_y, test_x, test_y = load_data_from_csv()
+    _, dtest, _, _, _, test_y = gen_test_data()
 
-    # Load models from saved files
     normal_model_path = os.path.join("app", "model_normal.xgb")
     custom_model_path = os.path.join("app", "model_custom.xgb")
     if not os.path.isfile(normal_model_path) or not os.path.isfile(custom_model_path):
@@ -38,7 +36,6 @@ def test_models_plots():
     custom_model = xgb.Booster()
     custom_model.load_model(custom_model_path)
 
-    # Generate predictions
     if is_multiclass:
         normal_preds = normal_model.predict(dtest)
         custom_preds = custom_model.predict(dtest)
@@ -46,7 +43,6 @@ def test_models_plots():
         normal_preds = np.round(normal_model.predict(dtest))
         custom_preds = np.round(custom_model.predict(dtest))
 
-    # Save plots instead of showing them.
     normal_metrics_path = os.path.join(plots_dir, "display_metrics_normal.png")
     custom_metrics_path = os.path.join(plots_dir, "display_metrics_custom.png")
     distribution_path = os.path.join(plots_dir, "label_distribution_side_by_side.png")

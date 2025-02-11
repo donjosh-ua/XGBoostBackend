@@ -1,8 +1,8 @@
-import pandas as pd
-from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay)
-import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from utils import conf_manager
+from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay)
 
 plt.switch_backend('agg')
 
@@ -12,9 +12,9 @@ def get_number_of_classes():
     
     header = conf_manager.get_value("has_header")
     if header is not None:
-        header = 0  # default header
+        header = 0  # first row header
     
-    data = pd.read_csv(loaded_path, header=header)
+    data = pd.read_csv(loaded_path, header=header, sep=conf_manager.get_value("separator"))
     
     return len(data.iloc[:, -1].unique())
 
