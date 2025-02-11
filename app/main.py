@@ -13,7 +13,7 @@ app = FastAPI(
 # Configure CORS
 origins = [
     "http://localhost:5173",    # frontend url
-    "https://xgboostfrontend.vercel.app/",
+    "https://xgboostfrontend.vercel.app"
 ]
 
 app.add_middleware(
