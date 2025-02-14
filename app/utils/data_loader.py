@@ -1,6 +1,6 @@
 import pandas as pd
 import xgboost as xgb
-from utils import conf_manager
+from app.utils import conf_manager
 from sklearn.model_selection import train_test_split
 
 def load_data_from_csv() -> tuple:

@@ -1,9 +1,9 @@
 import os
 import pandas as pd
 from pydantic import BaseModel
-from utils import conf_manager 
+from app.utils import conf_manager 
 from fastapi import APIRouter, HTTPException
-from utils.common_methods import get_number_of_classes
+from app.utils.common_methods import get_number_of_classes
 
 router = APIRouter()
 

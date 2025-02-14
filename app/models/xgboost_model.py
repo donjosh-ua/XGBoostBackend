@@ -2,9 +2,9 @@ import xgboost as xgb
 import pandas as pd
 import numpy as np
 
-from utils import conf_manager
-from utils.data_loader import load_data_from_csv
-from models.pymc_adjust import custom_objective_factory
+from app.utils import conf_manager
+from app.utils.data_loader import load_data_from_csv
+from app.models.pymc_adjust import custom_objective_factory
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import GridSearchCV, KFold
 

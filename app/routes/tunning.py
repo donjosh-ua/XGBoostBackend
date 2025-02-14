@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from utils import conf_manager
 from fastapi import APIRouter, HTTPException
-from models.xgboost_model import grid_search_xgboost
-from utils.common_methods import get_number_of_classes
+from app.utils import conf_manager
+from app.models.xgboost_model import grid_search_xgboost
+from app.utils.common_methods import get_number_of_classes
 
 router = APIRouter()
 

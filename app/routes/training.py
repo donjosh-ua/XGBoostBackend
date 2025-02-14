@@ -1,10 +1,10 @@
 import os
 from pydantic import BaseModel
-from utils import conf_manager
-from schemas.models import TrainResponse
+from app.utils import conf_manager
+from app.utils.common_methods import plot_accuracy_lines_and_curves
+from app.schemas.models import TrainResponse
 from fastapi import APIRouter, HTTPException
-from utils.common_methods import plot_accuracy_lines_and_curves
-from models.xgboost_model import train_normal_xgboost, train_custom_xgboost
+from app.models.xgboost_model import train_normal_xgboost, train_custom_xgboost
 
 router = APIRouter()
 

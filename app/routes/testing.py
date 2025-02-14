@@ -2,8 +2,8 @@ import os
 import base64
 import numpy as np
 import xgboost as xgb
-from utils.common_methods import *
-from utils.data_loader import gen_test_data
+from app.utils.common_methods import *
+from app.utils.data_loader import gen_test_data
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()

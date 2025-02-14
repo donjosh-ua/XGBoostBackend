@@ -1,8 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
-from routes import training
+from app.routes import training
 from fastapi.middleware.cors import CORSMiddleware
-from routes import predict, data_file, tunning, testing
+from app.routes import predict, data_file, tunning, testing
 
 app = FastAPI(
     title="XGBoost with FastAPI",
