@@ -1,4 +1,4 @@
-import uvicorn
+# import uvicorn
 from fastapi import FastAPI
 from app.routes import training
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,7 @@ app = FastAPI(
 
 # Configure CORS
 origins = [
-    "http://localhost:5173",    # frontend url
+    # "http://localhost:5173",    # frontend url
     "https://xgboostfrontend.vercel.app"
 ]
 
@@ -31,9 +31,9 @@ app.include_router(training.router, prefix="/train", tags=["Entrenamiento"])
 app.include_router(testing.router, prefix="/test", tags=["Testing"])
 app.include_router(predict.router, prefix="/predict", tags=["Predicción"])
 
-@app.get("/")
-def read_root():
+@app.get("/", tags=["root"])
+def root():
     return {"message": "Bienvenido a la API de XGBoost con FastAPI"}
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

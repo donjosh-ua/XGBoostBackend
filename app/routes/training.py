@@ -100,8 +100,8 @@ async def train_both_models(request: TrainRequest):
         _, normal_results = train_normal_xgboost(data_path, model_params, request.method)
         _, custom_results = train_custom_xgboost(data_path, model_params, request.distribution, request.method)
 
-        BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-        plots_dir = os.path.join(BASE_DIR, "plots")
+        # BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+        plots_dir = os.path.join("app", "data", "plots")
         if not os.path.exists(plots_dir):
             os.makedirs(plots_dir)
             

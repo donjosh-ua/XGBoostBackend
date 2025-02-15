@@ -16,8 +16,8 @@ def test_models_plots():
     and returns the base64 encoded images so that the frontend can render and store them.
     """
     # Compute plots folder (create if not exists)
-    BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-    plots_dir = os.path.join(BASE_DIR, "plots")
+    # BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    plots_dir = os.path.join("app", "data", "plots")
     if not os.path.exists(plots_dir):
         os.makedirs(plots_dir)
 
