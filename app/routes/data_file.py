@@ -1,13 +1,15 @@
 import os
 import pandas as pd
+import aiofiles
 from pydantic import BaseModel
 from app.utils import conf_manager 
-from fastapi import APIRouter, HTTPException
 from app.utils.common_methods import get_number_of_classes
+from fastapi import APIRouter, HTTPException, File, UploadFile
+
 
 router = APIRouter()
 
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+DATA_DIR = os.path.join(".", "app", "data")
 
 class FileSelection(BaseModel):
     filename: str
@@ -17,6 +19,7 @@ class DataLoadRequest(BaseModel):
     has_header: bool
     separator: str
 
+
 @router.get("/files")
 def get_data_files():
     try:
@@ -25,6 +28,7 @@ def get_data_files():
         return {"files": csv_files}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/select")
 def select_data_file(selection: FileSelection):
@@ -46,6 +50,7 @@ def select_data_file(selection: FileSelection):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return {"message": f"Selected file set to {selection.filename}", "preview": preview}
+
 
 @router.post("/load")
 def load_data_file(request: DataLoadRequest):
@@ -99,3 +104,55 @@ def load_data_file(request: DataLoadRequest):
         return {"message": f"File {request.filename} loaded successfully", "preview": preview}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    safe_filename = os.path.basename(file.filename)
+    file_path = os.path.join(DATA_DIR, safe_filename)
+    
+    # Ensure DATA_DIR exists
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+    
+    try:
+        contents = await file.read()
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(contents)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Something went wrong: ' + str(e))
+    finally:
+        await file.close()
+    
+    # After upload, load the file and update the configuration
+    try:
+        df = pd.read_csv(file_path)
+        preview = df.head(10).to_dict(orient="records")
+        
+        # Update the config with the new file settings
+        conf_manager.set_value("selected_file", safe_filename)
+        conf_manager.set_value("loaded_data_path", file_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload succeeded, but file could not be loaded: {e}")
+    
+    return {"message": f"Successfully uploaded and loaded {safe_filename}", "preview": preview}
+
+@router.delete("/delete")
+def delete_data_file(selection: FileSelection):
+
+    safe_filename = os.path.basename(selection.filename)
+    file_path = os.path.join(DATA_DIR, safe_filename)
+    
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    try:
+        os.remove(file_path)
+        # Optionally, update the configuration if the deleted file was selected/loaded
+        current_selected = conf_manager.get_value("selected_file")
+        if current_selected == safe_filename:
+            conf_manager.set_value("selected_file", "")
+            conf_manager.set_value("loaded_data_path", "")
+        return {"message": f"File {safe_filename} has been deleted."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred while deleting the file: {e}")

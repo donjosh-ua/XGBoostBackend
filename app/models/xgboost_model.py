@@ -30,7 +30,7 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
             evals=[(dtrain, 'train'), (dtest, 'test')],
             evals_result=evals_result
         )
-        model.save_model("app/model_normal.xgb")
+        model.save_model("./app/model_normal.xgb")
 
         return model, evals_result
     elif method == "cv":
@@ -61,7 +61,7 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
             evals_result=evals_result
         )
 
-        booster.save_model("app/model_custom.xgb")
+        booster.save_model("./app/model_custom.xgb")
 
         return booster, evals_result
     else:
@@ -90,7 +90,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
             evals=[(dtrain, 'train'), (dtest, 'test')],
             evals_result=evals_result
         )
-        model.save_model("app/model_custom.xgb")
+        model.save_model("./app/model_custom.xgb")
         return model, evals_result
 
     elif method == "cv":
@@ -122,7 +122,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
                 evals_result=evals_result
             )
 
-        booster.save_model("app/model_custom.xgb")
+        booster.save_model("./app/model_custom.xgb")
 
         return booster, evals_result
     else:
@@ -195,6 +195,7 @@ def grid_search_xgboost():
 
     _, _, train_x, train_y, _, _ = load_data_from_csv()
 
+    # Definir el espacio de búsqueda
     # param_grid = {
     #     'max_depth': [3, 5, 8, 10],
     #     'learning_rate': [0.01, 0.1, 0.2],
@@ -206,6 +207,7 @@ def grid_search_xgboost():
     #     'scale_pos_weight': [1, 3]  # Para manejar desbalance de clases
     # }
 
+    # Parametros reducidos para acelerar el proceso
     param_grid = {
         'max_depth': [3, 5],
         'learning_rate': [0.01, 0.1],
@@ -214,7 +216,7 @@ def grid_search_xgboost():
         'subsample': [0.7, 0.8],
         'colsample_bytree': [0.7, 0.8],
         'min_child_weight': [1, 3],
-        'scale_pos_weight': [1, 3]  # Para manejar desbalance de clases
+        'scale_pos_weight': [1, 3]
     }
 
     # Convertir los datos a DMatrix
