@@ -22,8 +22,7 @@ def load_data_from_csv() -> tuple:
         train_ratio = 0.7  # default training ratio
     
     header = conf_manager.get_value("has_header")
-    if header is not None:
-        header = 0  # default header
+    header = 0 if header else None 
 
     seed = conf_manager.get_value("kseed")  # default random seed
 
@@ -48,7 +47,7 @@ def gen_test_data():
         print("No data file loaded. Please load a data file first using the /load endpoint.")
     
     # Load train_ratio and seed from settings, with defaults if not set.
-    train_ratio = 0.5  # default training ratio
+    train_ratio = 0.7  # default training ratio
     
     header = conf_manager.get_value("has_header")
     if header is not None:

@@ -11,8 +11,6 @@ from sklearn.model_selection import GridSearchCV, KFold
 
 kSeed = conf_manager.get_value("kseed")
 
-params = {}
-
 def train_normal_xgboost(data_path: str, params: dict, method: str = "split", num_folds: int = 5):
     """
     Entrena un modelo XGBoost normal usando split o cross validation.
@@ -76,7 +74,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
     rounds = conf_manager.get_value("rounds")
     folds = conf_manager.get_value("training_value") if method == "cv" else num_folds
 
-    custom_obj = custom_objective_factory(distribution)
+    custom_obj = custom_objective_factory()
     
     if method == "split":
         dtrain, dtest, _, _, _, _ = load_data_from_csv()

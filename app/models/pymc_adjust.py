@@ -1,29 +1,23 @@
 import pymc as pm
 import numpy as np
 from scipy.special import expit
+from app.utils import conf_manager
 
-# Constantes
-kSeed = 1994
-kRatio = 0.7
-num_rounds = 50
-np.random.seed(kSeed)
 
-# Archivo de datos
-datafile = 'pima-indians-diabetes.data.csv'
-# datafile = 'glass.csv'
 
 # Configuracion de la distribución
-distribution = 'Normal'
-distribution_params = {
-    'Normal': {'mu': 0, 'sigma': 10},
-    'HalfNormal': {'sigma': 10},
-    'Cauchy': {'alpha': 0, 'beta': 1},
-    'Exponential': {'lam': 1}
-}
+def get_config_params():
 
+    custom_params = conf_manager.get_value("custom_parameters")
+    distribution_params = {
+        'Normal': {'mu': custom_params['mean'], 'sigma': custom_params['sigma']},
+        'HalfNormal': {'sigma': custom_params['sigma']},
+        'Cauchy': {'alpha': custom_params['alpha'], 'beta': custom_params['beta']},
+        'Exponential': {'lam': custom_params['lambda']}
+    }
 
-def get_config_params(distribution: str):
-    params = distribution_params[distribution]
+    params = distribution_params[conf_manager.get_value("distribution")]
+
     return params
 
 def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
@@ -32,7 +26,8 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
     Soporta binario (1D) o multiclass (2D) aplicando logistic o softmax.
     """
     preds = np.array(preds)
-    params = get_config_params(distribution)
+    params = get_config_params()
+    distribution = conf_manager.get_value("distribution")
 
     # Mapeo de distribuciones
     distributions = {
@@ -57,7 +52,9 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
     dist_func = distributions.get(distribution)
     if dist_func is None:
         raise ValueError(f"Distribución '{distribution}' no soportada.")
+    
     with pm.Model() as model:
+
         adjustment = dist_func("adjustment", params, shape=shape)
         adjusted_logits = preds + adjustment
 
@@ -77,8 +74,7 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
     return adjusted_preds
 
 
-
-def custom_objective_factory(distribution: str):
+def custom_objective_factory():
     """
     Crea una función de objetivo personalizada con la distribución especificada.
     """

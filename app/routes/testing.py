@@ -3,7 +3,7 @@ import base64
 import numpy as np
 import xgboost as xgb
 from app.utils.common_methods import *
-from app.utils.data_loader import gen_test_data
+from app.utils.data_loader import load_data_from_csv
 from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
@@ -16,7 +16,6 @@ def test_models_plots():
     and returns the base64 encoded images so that the frontend can render and store them.
     """
     # Compute plots folder (create if not exists)
-    # BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
     plots_dir = os.path.join("app", "data", "plots")
     if not os.path.exists(plots_dir):
         os.makedirs(plots_dir)
@@ -24,7 +23,7 @@ def test_models_plots():
     num_classes = get_number_of_classes()
     is_multiclass = num_classes > 2
 
-    _, dtest, _, _, _, test_y = gen_test_data()
+    _, dtest, _, _, _, test_y = load_data_from_csv()
 
     normal_model_path = os.path.join("app", "model_normal.xgb")
     custom_model_path = os.path.join("app", "model_custom.xgb")
