@@ -25,9 +25,7 @@ def load_data_from_csv() -> tuple:
     if header is not None:
         header = 0  # default header
 
-    seed = conf_manager.get_value("seed")
-    if seed is None:
-        seed = 42  # default random seed
+    seed = conf_manager.get_value("kseed")  # default random seed
 
     data = pd.read_csv(datafile, header=header, sep=conf_manager.get_value("separator"))
     X = data.iloc[:, :-1].values
@@ -56,9 +54,7 @@ def gen_test_data():
     if header is not None:
         header = 0  # default header
 
-    seed = conf_manager.get_value("seed")
-    if seed is None:
-        seed = 42  # default random seed
+    seed = conf_manager.get_value("kseed")
 
     data = pd.read_csv(datafile, header=header, sep=conf_manager.get_value("separator"))
     X = data.iloc[:, :-1].values

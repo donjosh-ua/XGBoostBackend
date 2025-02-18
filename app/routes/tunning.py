@@ -33,6 +33,7 @@ async def select_parameters(request: ParameterSelectionRequest):
 
         # Copy initial parameters from the request
         params = request.parameters.copy()
+        params.update({'seed': conf_manager.get_value("kseed")}) 
 
         # Update parameters based on the number of classes
         if num_classes > 2:

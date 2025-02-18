@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.model_selection import GridSearchCV, KFold
 
 
-kSeed = 42  # constant seed
+kSeed = conf_manager.get_value("kseed")
 
 params = {}
 
