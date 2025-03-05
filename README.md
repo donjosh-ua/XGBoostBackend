@@ -4,18 +4,16 @@ Esta es una implementación de un backend para el modelo de XGBoost. Este backen
 
 ### Instalación
 
-1. Abrir este proyecto en una terminal. Para esto se debe abrir la carpeta del proyecto. Dentro del proyecto, dar click derecho y seleccionar la opción **"Abrir en terminal"**. Una alternativa a esto es abrir una terminal y navegar hasta la carpeta del proyecto mediante el comando `cd`.
+1. Abrir el proyecto en un entorno de desarrollo o en su defecto, en una terminal.
 
-2. Una vez en la terminal, ejecutar el siguiente comando para instalar las dependencias del proyecto:
+2. Instalar las dependencias necesarias para el proyecto    , las cuales están en el archivo `requirements.txt`.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-3. Para ejecutar el backend, ejecutar el siguiente comando:
+3. Para ejecutar el servicio, ejecutar el siguiente comando dentro de la raiz del proyecto:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
+
+4. Probar conectividad abriendo en el navegador el siguiente enlace `http://localhost:8080/`. Debería aparecer un mensaje de bienvenida.
+
+Con esto, el backend estará listo para recibir peticiones y realizar predicciones. Para usar este servicio, usar la ruta anterior como base en el frontend.
