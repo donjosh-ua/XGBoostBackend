@@ -1,11 +1,17 @@
+"""
+Main application entry point.
+Sets up and configures the FastAPI application.
+"""
 from fastapi import FastAPI
-from app.controller import training
 from fastapi.middleware.cors import CORSMiddleware
-from app.controller import predict, data_file, tunning, testing, neural_network
 
+from app.api.routes import router
+from app.core.logging import app_logger as logger
+
+# Create FastAPI app
 app = FastAPI(
     title="XGBoost with FastAPI",
-    description="API para entrenar y predecir con modelos XGBoost y ajuste bayesiano.",
+    description="API for training and predicting with XGBoost models and neural networks",
     version="1.0.0",
 )
 
@@ -23,21 +29,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir routers
-app.include_router(data_file.router, prefix="/data", tags=["Data"])
-app.include_router(tunning.router, prefix="/parameters", tags=["Parámetros"])
-app.include_router(training.router, prefix="/train", tags=["Entrenamiento"])
-app.include_router(testing.router, prefix="/test", tags=["Testing"])
-app.include_router(predict.router, prefix="/predict", tags=["Predicción"])
-app.include_router(
-    neural_network.router, prefix="/neural-network", tags=["Red Neuronal"]
-)
+# Include API routers
+app.include_router(router)
 
 
 @app.get("/", tags=["root"])
 def root():
+    """
+    Root endpoint that returns a welcome message.
+    """
     return {"message": "Bienvenido a la API de XGBoost con FastAPI"}
 
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+@app.on_event("startup")
+async def startup_event():
+    """
+    Runs when the application starts.
+    Initialize resources, connections, etc.
+    """
+    logger.info("Application started")
+    
+    # Ensure required directories exist
+    from app.common.utils import ensure_directory_exists
+    ensure_directory_exists("app/data/datasets")
+    ensure_directory_exists("app/data/models/xgboost")
+    ensure_directory_exists("app/data/models/neural_network")
+    ensure_directory_exists("app/data/outputs/plots")
+    ensure_directory_exists("app/data/outputs/results")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Runs when the application shuts down.
+    Clean up resources, close connections, etc.
+    """
+    logger.info("Application shutting down")
+
+
+# Run the application using Uvicorn if executed directly
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8080, reload=True)

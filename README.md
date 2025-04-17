@@ -6,7 +6,7 @@ Esta es una implementación de un backend para el modelo de XGBoost. Este backen
 
 1. Abrir el proyecto en un entorno de desarrollo o en su defecto, en una terminal.
 
-2. Instalar las dependencias necesarias para el proyecto    , las cuales están en el archivo `requirements.txt`.
+2. Instalar las dependencias necesarias para el proyecto , las cuales están en el archivo `requirements.txt`.
 
 3. Para ejecutar el servicio, ejecutar el siguiente comando dentro de la raiz del proyecto:
 
