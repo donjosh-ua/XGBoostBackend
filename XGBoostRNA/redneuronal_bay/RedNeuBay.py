@@ -14,6 +14,8 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from builtins import input
 
+output_folder = "XGBoostRNA/rna_models/"
+
 _optimizers = {
     "SGD": SGD,
     "Nesterov": Nesterov,
@@ -214,7 +216,7 @@ class RedNeuBay(object):
                 )
             else:
                 nam = "best_" + self.save_mod
-                ee = torch.load(nam)
+                ee = torch.load(output_folder + nam)
                 self.predict(
                     mod=ee,
                     x=X_test,
@@ -395,7 +397,7 @@ class RedNeuBay(object):
                 nam = "best_" + self.save_mod + "_K" + k_item
 
                 # ee = torch.load(nam)
-                ee = torch.load(nam, weights_only=False)
+                ee = torch.load(output_folder + nam, weights_only=False)
 
                 ac = self.cv_predict(
                     mod=ee,

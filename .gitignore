@@ -3,3 +3,4 @@
 *.http
 *.csv
 *.xgb
+XGBoostRNA/rna_models/*
