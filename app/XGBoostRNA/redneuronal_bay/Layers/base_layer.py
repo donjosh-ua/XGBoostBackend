@@ -1,8 +1,10 @@
 from __future__ import division
 from abc import abstractmethod, ABCMeta
 import numpy as np
-from redneuronal_bay.funcion_activacion import *
-from redneuronal_bay import RedNeuBay
+from app.XGBoostRNA.redneuronal_bay.funcion_activacion import *
+
+# Removing circular import
+# from app.XGBoostRNA import RedNeuBay
 import torch
 import math
 from torch import FloatTensor

@@ -1,5 +1,5 @@
-from redneuronal_bay.Layers.base_layer import BaseLayer
-from redneuronal_bay.funcion_activacion import *
+from app.XGBoostRNA.redneuronal_bay.Layers.base_layer import BaseLayer
+from app.XGBoostRNA.redneuronal_bay.funcion_activacion import *
 import numpy as np
 import torch
 from torch import FloatTensor

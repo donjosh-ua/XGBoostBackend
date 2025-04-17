@@ -1,6 +1,6 @@
 from __future__ import division, absolute_import
-import redneuronal_bay.utils as utils
-from redneuronal_bay.preprocesamiento import label_encoder
+import app.XGBoostRNA.redneuronal_bay.utils as utils
+from app.XGBoostRNA.redneuronal_bay.preprocesamiento import label_encoder
 import numpy as np
 
 """

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.controller import training
 from fastapi.middleware.cors import CORSMiddleware
-from app.controller import predict, data_file, tunning, testing
+from app.controller import predict, data_file, tunning, testing, neural_network
 
 app = FastAPI(
     title="XGBoost with FastAPI",
@@ -29,6 +29,9 @@ app.include_router(tunning.router, prefix="/parameters", tags=["Parámetros"])
 app.include_router(training.router, prefix="/train", tags=["Entrenamiento"])
 app.include_router(testing.router, prefix="/test", tags=["Testing"])
 app.include_router(predict.router, prefix="/predict", tags=["Predicción"])
+app.include_router(
+    neural_network.router, prefix="/neural-network", tags=["Red Neuronal"]
+)
 
 
 @app.get("/", tags=["root"])

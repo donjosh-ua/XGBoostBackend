@@ -2,19 +2,19 @@ import numpy as np
 import torch
 import sys
 import pandas as pd
-from redneuronal_bay.Layers.layers import *
-from redneuronal_bay.utils import *
-from redneuronal_bay.funcion_costo import *
+from app.XGBoostRNA.redneuronal_bay.Layers.layers import *
+from app.XGBoostRNA.redneuronal_bay.utils import *
+from app.XGBoostRNA.redneuronal_bay.funcion_costo import *
 from collections import OrderedDict, defaultdict
-from redneuronal_bay.Optimizers.optimizers import *
-from redneuronal_bay.metricas_eva import *
-from redneuronal_bay.Div_Datos import *
+from app.XGBoostRNA.redneuronal_bay.Optimizers.optimizers import *
+from app.XGBoostRNA.redneuronal_bay.metricas_eva import *
+from app.XGBoostRNA.redneuronal_bay.Div_Datos import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from builtins import input
 
-output_folder = "XGBoostRNA/rna_models/"
+output_folder = "app/XGBoostRNA/rna_models/"
 
 _optimizers = {
     "SGD": SGD,
@@ -29,7 +29,7 @@ _Criteria = {
     "Log_neg": NLLLoss,
     "entropy_bin": BCELoss,
 }
-_FA_extra = {"softmax": softmax}
+# _FA_extra = {"softmax": softmax}
 # _metrics = {'MSE':mean_squared_error, 'AS':accuracy_score}
 
 

@@ -6,16 +6,15 @@ import time as t
 import pytensor.tensor as tt
 import pymc as pm
 from torch.autograd import Variable
-from redneuronal_bay.utils import *
-from redneuronal_bay.metricas_eva import accuracy_score
-from redneuronal_bay.utils import cambia_labels
-from redneuronal_bay.funcion_activacion import softmax
-from redneuronal_bay import RedNeuBay
+from app.XGBoostRNA.redneuronal_bay.utils import *
+from app.XGBoostRNA.redneuronal_bay.metricas_eva import accuracy_score
+from app.XGBoostRNA.redneuronal_bay.utils import cambia_labels
+from app.XGBoostRNA.redneuronal_bay.funcion_activacion import softmax
 import matplotlib.pyplot as plt
 import logging
 import seaborn as sns
 
-output_folder = "XGBoostRNA/rna_models/"
+output_folder = "app/XGBoostRNA/rna_models/"
 
 "Clase base para todos los optimizadores"
 

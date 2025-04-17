@@ -1,5 +1,5 @@
 from __future__ import division
-from redneuronal_bay.Optimizers.base_optimizer import BaseOptimizer
+from app.XGBoostRNA.redneuronal_bay.Optimizers.base_optimizer import BaseOptimizer
 import numpy as np
 import copy
 
