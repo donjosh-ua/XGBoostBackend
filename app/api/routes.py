@@ -9,9 +9,9 @@ from app.modules.xgboost.controllers.training import router as xgboost_training_
 from app.modules.xgboost.controllers.prediction import router as xgboost_prediction_router
 from app.modules.xgboost.controllers.tuning import router as xgboost_tuning_router
 from app.modules.xgboost.controllers.testing import router as xgboost_testing_router
-# Neural network module not fully implemented yet
-# from app.modules.neural_network.controllers.training import router as nn_training_router
-# from app.modules.neural_network.controllers.prediction import router as nn_prediction_router
+# Neural network module imports
+from app.modules.neural_network.controllers.training import router as nn_training_router
+from app.modules.neural_network.controllers.prediction import router as nn_prediction_router
 from app.modules.data_management.controllers.data_file import router as data_router
 
 
@@ -34,9 +34,9 @@ def create_router() -> APIRouter:
     main_router.include_router(xgboost_tuning_router, prefix="/xgboost/parameters", tags=["XGBoost Parameters"])
     main_router.include_router(xgboost_testing_router, prefix="/xgboost/test", tags=["XGBoost Testing"])
     
-    # Neural Network routers - commented out until implementation is complete
-    # main_router.include_router(nn_training_router, prefix="/neural-network/train", tags=["Neural Network Training"])
-    # main_router.include_router(nn_prediction_router, prefix="/neural-network/predict", tags=["Neural Network Prediction"])
+    # Neural Network routers
+    main_router.include_router(nn_training_router, prefix="/neural-network/train", tags=["Neural Network Training"])
+    main_router.include_router(nn_prediction_router, prefix="/neural-network/predict", tags=["Neural Network Prediction"])
     
     return main_router
 

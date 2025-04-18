@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple, Any, Optional, Union, Callable
 
 import pymc as pm
 from scipy.special import expit
+from sklearn.model_selection import KFold
 
 from app.core import config
 from app.common.data_handling import load_data_from_csv, save_model
