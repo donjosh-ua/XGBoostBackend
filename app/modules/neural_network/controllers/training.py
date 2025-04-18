@@ -38,6 +38,9 @@ async def train_simple_model(config_data: NeuralNetworkConfig):
         
         data_path = get_dataset_path(selected_file)
         
+        # Generate a model name for visualization
+        model_name = f"simple_nn_{config_data.optimizer}"
+        
         # Convert Pydantic model to dict
         nn_config = {
             "hidden_size": config_data.hidden_layers[0] if config_data.hidden_layers else 64,
@@ -50,8 +53,13 @@ async def train_simple_model(config_data: NeuralNetworkConfig):
             "momentum": config_data.momentum,
             "has_header": config.get_value("has_header", False),
             "separator": config.get_value("separator", ","),
-            "bayesian": False  # Standard neural network
+            "bayesian": False,  # Standard neural network
+            "save_mod": model_name  # Add the model name for visualization
         }
+        
+        # Save config to application settings
+        config.set_value("nn_config", nn_config)
+        config.set_value("nn_training_method", "split")
         
         # Train the model
         logger.info("Training simple neural network model")
@@ -97,6 +105,9 @@ async def train_bayesian_model(config_data: NeuralNetworkConfig):
         
         data_path = get_dataset_path(selected_file)
         
+        # Generate a model name for visualization
+        model_name = f"bayesian_nn_{config_data.alpha}"
+        
         # Convert Pydantic model to dict
         nn_config = {
             "hidden_size": config_data.hidden_layers[0] if config_data.hidden_layers else 64,
@@ -108,8 +119,13 @@ async def train_bayesian_model(config_data: NeuralNetworkConfig):
             "has_header": config.get_value("has_header", False),
             "separator": config.get_value("separator", ","),
             "bayesian": True,  # Bayesian neural network
-            "Lambda": config_data.Lambda  # Regularization parameter for Bayesian network
+            "Lambda": config_data.Lambda,  # Regularization parameter for Bayesian network
+            "save_mod": model_name  # Add the model name for visualization
         }
+        
+        # Save config to application settings
+        config.set_value("nn_config", nn_config)
+        config.set_value("nn_training_method", "split")
         
         # Train the model
         logger.info("Training Bayesian neural network model")

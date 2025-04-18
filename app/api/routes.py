@@ -12,6 +12,7 @@ from app.modules.xgboost.controllers.testing import router as xgboost_testing_ro
 # Neural network module imports
 from app.modules.neural_network.controllers.training import router as nn_training_router
 from app.modules.neural_network.controllers.prediction import router as nn_prediction_router
+from app.modules.neural_network.controllers.visualizations import router as nn_visualizations_router
 from app.modules.data_management.controllers.data_file import router as data_router
 
 
@@ -37,6 +38,7 @@ def create_router() -> APIRouter:
     # Neural Network routers
     main_router.include_router(nn_training_router, prefix="/neural-network/train", tags=["Neural Network Training"])
     main_router.include_router(nn_prediction_router, prefix="/neural-network/predict", tags=["Neural Network Prediction"])
+    main_router.include_router(nn_visualizations_router, prefix="/neural-network/visualizations", tags=["Neural Network Visualizations"])
     
     return main_router
 

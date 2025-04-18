@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from app.config import conf_manager
 from app.common.common_methods import plot_accuracy_lines_and_curves
 from app.domain.models import TrainResponse
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 import os
 from app.service.neural_network_model import (
     train_neural_network,
@@ -101,6 +101,71 @@ async def train_nn_model(request: TrainNNRequest):
         conf_manager.set_value("nn_metrics", metrics)
 
         return {"message": "Neural Network trained successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/visualizations/{plot_type}")
+async def get_visualization(plot_type: str):
+    """
+    Endpoint to get visualization plots generated during neural network training.
+    
+    Args:
+        plot_type (str): Type of plot to retrieve (history, confusion_matrix, comparison)
+        
+    Returns:
+        The requested image file
+    """
+    try:
+        # Get model name from config
+        nn_config = conf_manager.get_value("nn_config")
+        if not nn_config:
+            raise HTTPException(
+                status_code=400,
+                detail="No neural network configuration found. Please train a model first."
+            )
+        
+        model_name = nn_config.get("save_mod", "NNModel")
+        method = conf_manager.get_value("nn_training_method", "split")
+        
+        # Define plot paths based on type
+        plots_folder = "app/data/plots"
+        if not os.path.exists(plots_folder):
+            raise HTTPException(
+                status_code=404,
+                detail="Plots directory not found."
+            )
+        
+        plot_path = ""
+        if plot_type == "history":
+            if method.lower() == "cv":
+                plot_path = os.path.join(plots_folder, f"{model_name}_cv_history.png")
+            else:
+                plot_path = os.path.join(plots_folder, f"{model_name}_history.png")
+        elif plot_type == "confusion_matrix":
+            plot_path = os.path.join(plots_folder, f"{model_name}_confusion_matrix.png")
+        elif plot_type == "comparison":
+            plot_path = os.path.join(plots_folder, "nn_comparison.png")
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid plot type: {plot_type}. Valid types are: history, confusion_matrix, comparison"
+            )
+        
+        # Check if the plot exists
+        if not os.path.exists(plot_path):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Plot not found: {plot_path}"
+            )
+        
+        # Read the image file
+        with open(plot_path, "rb") as f:
+            image_data = f.read()
+        
+        # Return the image
+        return Response(content=image_data, media_type="image/png")
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

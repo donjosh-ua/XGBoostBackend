@@ -61,7 +61,7 @@ def create_network(config, input_dim, num_classes):
     # Create the RedNeuBay instance with the provided configuration
     network = RedNeuBay(
         alpha=config.get("alpha", 0.001),
-        epoch=config.get("epoch", 100),
+        epoch=config.get("epoch", 50),
         criteria=config.get("criteria", "cross_entropy"),
         optimizer=config.get("optimizer", "SGD"),
         image_size=config.get("image_size", None),
@@ -76,7 +76,7 @@ def create_network(config, input_dim, num_classes):
         pred_hot=config.get("pred_hot", True),
         test_size=config.get("test_size", 0.2),
         batch_size=config.get("batch_size", 64),
-        cv=config.get("cv", False),
+        cv=config.get("cv", True),
         Kfold=config.get("Kfold", 5),
     )
 
@@ -149,8 +149,21 @@ def train_neural_network(data_path, config, method="split"):
                     model, X_test, y_test, image=False, image_size=None
                 )
                 accuracies.append(accuracy)
+                
+                # Generate confusion matrix for the last fold
+                if k == network.Kfold - 1:
+                    y_pred = predict_with_neural_network(
+                        model, X_test, image=False, image_size=None
+                    )
+                    cm_path = os.path.join(PLOTS_FOLDER, f"{original_save_mod}_confusion_matrix.png")
+                    save_confusion_matrix(y_test, y_pred, cm_path)
 
         mean_accuracy = np.mean(accuracies) if accuracies else 0
+        
+        # Plot training history
+        if hasattr(network, 'optimizer') and hasattr(network.optimizer, 'loss_list'):
+            plot_training_history(network, original_save_mod, is_cv=True)
+            
         return result, {"accuracy": mean_accuracy}
     else:
         # Split training
@@ -170,6 +183,18 @@ def train_neural_network(data_path, config, method="split"):
             accuracy = predict_with_neural_network(
                 model, X_test, y_test, image=False, image_size=None
             )
+            
+            # Generate confusion matrix
+            y_pred = predict_with_neural_network(
+                model, X_test, image=False, image_size=None
+            )
+            cm_path = os.path.join(PLOTS_FOLDER, f"{original_save_mod}_confusion_matrix.png")
+            save_confusion_matrix(y_test, y_pred, cm_path)
+            
+            # Plot training history
+            if hasattr(network, 'optimizer') and hasattr(network.optimizer, 'loss_list'):
+                plot_training_history(network, original_save_mod, is_cv=False)
+                
             return result, {"accuracy": accuracy}
 
         return result, {"accuracy": 0}
@@ -210,6 +235,90 @@ def predict_with_neural_network(model, X, y=None, image=False, image_size=None):
         n_total_row = len(y)
         accuracy = torch.sum(pred == y).float() / n_total_row
         return accuracy.item()
+
+
+def plot_training_history(network, model_name, is_cv=False):
+    """
+    Plot and save training history (loss and accuracy curves).
+    
+    Args:
+        network: The trained neural network
+        model_name: Name of the model for the plot filename
+        is_cv: Whether cross-validation was used
+    
+    Returns:
+        dict: Paths to the saved plot files
+    """
+    ensure_folders_exist()
+    plot_paths = {}
+    
+    # Check if we have training history data
+    if not hasattr(network, 'optimizer'):
+        return plot_paths
+    
+    optimizer = network.optimizer
+    
+    if is_cv and hasattr(optimizer, 'K_loss') and hasattr(optimizer, 'K_acc'):
+        # Plot loss curves for cross-validation
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.title("Training Loss by Fold")
+        
+        for i in range(len(optimizer.K_loss)):
+            plt.plot(np.arange(network.epoch), optimizer.K_loss[i], label=f"Fold {i+1}")
+        
+        plt.legend()
+        plt.grid(True)
+        
+        # Plot accuracy curves for cross-validation
+        plt.subplot(1, 2, 2)
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.title("Training Accuracy by Fold")
+        
+        for i in range(len(optimizer.K_acc)):
+            plt.plot(np.arange(network.epoch), optimizer.K_acc[i], label=f"Fold {i+1}")
+        
+        plt.legend()
+        plt.grid(True)
+        
+        plt.tight_layout()
+        cv_plot_path = os.path.join(PLOTS_FOLDER, f"{model_name}_cv_history.png")
+        plt.savefig(cv_plot_path)
+        plt.close()
+        plot_paths['cv_plot'] = cv_plot_path
+        
+    elif hasattr(optimizer, 'loss_list') and hasattr(optimizer, 'acc_list'):
+        # Plot loss and accuracy for standard training
+        plt.figure(figsize=(12, 6))
+        
+        # Loss plot
+        plt.subplot(1, 2, 1)
+        plt.plot(optimizer.loss_list, label="Training Loss")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.title("Training Loss")
+        plt.grid(True)
+        plt.legend()
+        
+        # Accuracy plot
+        plt.subplot(1, 2, 2)
+        plt.plot(optimizer.acc_list, label="Training Accuracy")
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.title("Training Accuracy")
+        plt.grid(True)
+        plt.legend()
+        
+        plt.tight_layout()
+        history_plot_path = os.path.join(PLOTS_FOLDER, f"{model_name}_history.png")
+        plt.savefig(history_plot_path)
+        plt.close()
+        plot_paths['history_plot'] = history_plot_path
+    
+    return plot_paths
 
 
 def save_confusion_matrix(y_true, y_pred, save_path):

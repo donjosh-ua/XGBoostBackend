@@ -14,7 +14,10 @@ from pyro.nn import PyroModule, PyroSample
 from pyro.infer import SVI, Trace_ELBO
 from pyro.infer.autoguide import AutoDiagonalNormal
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from typing import Dict, Optional, Tuple, Union, Any
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from app.core.logging import nn_logger as logger
 from app.core.exceptions import ModelError, TrainingError
@@ -212,6 +215,104 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float
     return metrics
 
 
+def plot_confusion_matrix(y_true, y_pred, model_name="neural_network", is_bayesian=False):
+    """
+    Create and save a confusion matrix visualization.
+    
+    Args:
+        y_true (np.ndarray): True labels
+        y_pred (np.ndarray): Predicted probabilities
+        model_name (str): Name of the model for the plot filename
+        is_bayesian (bool): Whether this is a Bayesian neural network
+        
+    Returns:
+        str: Path to the saved plot file
+    """
+    # Create plots directory if it doesn't exist
+    plots_dir = os.path.join("app", "data", "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    # Convert probabilities to class labels
+    if y_pred.ndim > 1:
+        y_pred_labels = np.argmax(y_pred, axis=1)
+    else:
+        y_pred_labels = (y_pred >= 0.5).astype(int)
+    
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred_labels)
+    
+    # Create the plot
+    plt.figure(figsize=(10, 8))
+    
+    # Plot as a heatmap with seaborn
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=['Class 0', 'Class 1'],
+                yticklabels=['Class 0', 'Class 1'])
+    
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title(f"{'Bayesian ' if is_bayesian else ''}Neural Network Confusion Matrix")
+    
+    plt.tight_layout()
+    plot_path = os.path.join(plots_dir, f"{model_name}_confusion_matrix.png")
+    plt.savefig(plot_path)
+    plt.close()
+    
+    logger.info(f"Confusion matrix plot saved to {plot_path}")
+    return plot_path
+
+
+def plot_training_history(losses, model_name="neural_network", is_bayesian=False, accuracy=None):
+    """
+    Create and save training history plots.
+    
+    Args:
+        losses (list): List of training losses
+        model_name (str): Name of the model for the plot filename
+        is_bayesian (bool): Whether this is a Bayesian neural network
+        accuracy (list, optional): List of training accuracies
+        
+    Returns:
+        str: Path to the saved plot file
+    """
+    # Create plots directory if it doesn't exist
+    plots_dir = os.path.join("app", "data", "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+    
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    
+    # Loss plot
+    plt.subplot(1, 2, 1)
+    plt.plot(losses, label=f"{'Bayesian ' if is_bayesian else ''}Training Loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title(f"{'Bayesian ' if is_bayesian else ''}Neural Network Training Loss")
+    plt.grid(True)
+    plt.legend()
+    
+    # Accuracy plot if available
+    plt.subplot(1, 2, 2)
+    if accuracy is not None:
+        plt.plot(accuracy, label=f"{'Bayesian ' if is_bayesian else ''}Accuracy")
+    else:
+        # Just show loss trend in the second plot
+        plt.plot(losses, label=f"{'Bayesian ' if is_bayesian else ''}Loss Trend")
+    plt.xlabel("Epochs")
+    plt.ylabel("Value")
+    plt.title(f"{'Bayesian ' if is_bayesian else ''}Neural Network {'Accuracy' if accuracy else 'Loss Trend'}")
+    plt.grid(True)
+    plt.legend()
+    
+    plt.tight_layout()
+    plot_path = os.path.join(plots_dir, f"{model_name}_history.png")
+    plt.savefig(plot_path)
+    plt.close()
+    
+    logger.info(f"Training history plot saved to {plot_path}")
+    return plot_path
+
+
 def train_neural_network(data_path: str, config: Dict[str, Any]) -> Tuple[Any, Dict[str, Any]]:
     """
     Train a neural network model on the given data.
@@ -333,6 +434,15 @@ def train_neural_network(data_path: str, config: Dict[str, Any]) -> Tuple[Any, D
             metrics = calculate_metrics(y_test, y_pred)
             metrics["loss"] = losses
             
+            # Get model name for visualization
+            model_name = config.get("save_mod", "bayesian_nn")
+            
+            # Generate and save training history plot
+            plot_training_history(losses, model_name, is_bayesian=True)
+            
+            # Generate and save confusion matrix plot
+            plot_confusion_matrix(y_test, y_pred, model_name, is_bayesian=True)
+            
             logger.info(f"Model saved to {model_path}")
             
             return (model, guide), metrics
@@ -355,8 +465,9 @@ def train_neural_network(data_path: str, config: Dict[str, Any]) -> Tuple[Any, D
             num_epochs = config.get("epochs", 100)
             batch_size = config.get("batch_size", 32)
             
-            # Keep track of losses
+            # Keep track of losses and accuracies
             losses = []
+            accuracies = []
             
             logger.info(f"Starting neural network training for {num_epochs} epochs")
             
@@ -372,6 +483,14 @@ def train_neural_network(data_path: str, config: Dict[str, Any]) -> Tuple[Any, D
                 
                 # Record loss
                 losses.append(loss.item())
+                
+                # Calculate accuracy periodically
+                if epoch % 5 == 0:
+                    with torch.no_grad():
+                        predicted = (outputs >= 0.5).float()
+                        correct = (predicted == y_train_tensor).sum().item()
+                        accuracy = correct / y_train_tensor.size(0)
+                        accuracies.append(accuracy)
                 
                 if (epoch+1) % 10 == 0:
                     logger.info(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
@@ -390,6 +509,18 @@ def train_neural_network(data_path: str, config: Dict[str, Any]) -> Tuple[Any, D
             # Calculate metrics
             metrics = calculate_metrics(y_test, y_pred)
             metrics["loss"] = losses
+            
+            # Get model name for visualization
+            model_name = config.get("save_mod", "simple_nn")
+            
+            # Generate and save training history plot
+            if accuracies:
+                plot_training_history(losses, model_name, is_bayesian=False, accuracy=accuracies)
+            else:
+                plot_training_history(losses, model_name, is_bayesian=False)
+            
+            # Generate and save confusion matrix plot
+            plot_confusion_matrix(y_test, y_pred, model_name, is_bayesian=False)
             
             logger.info(f"Model saved to {model_path}")
             
