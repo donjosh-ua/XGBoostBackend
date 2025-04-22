@@ -1,4 +1,5 @@
 import os
+from tkinter.tix import Form
 import pandas as pd
 import aiofiles
 from pydantic import BaseModel
@@ -107,7 +108,8 @@ def load_data_file(request: DataLoadRequest):
 
 
 @router.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(file: UploadFile = File(...), separator: str = Form(',')):
+    
     safe_filename = os.path.basename(file.filename)
     file_path = os.path.join(DATA_DIR, safe_filename)
     
@@ -126,7 +128,7 @@ async def upload(file: UploadFile = File(...)):
     
     # After upload, load the file and update the configuration
     try:
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(file_path, sep=separator)
         preview = df.head(10).to_dict(orient="records")
         
         # Update the config with the new file settings
