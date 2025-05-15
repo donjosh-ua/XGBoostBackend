@@ -9,12 +9,12 @@ isort
 lazy-object-proxy
 mccabe
 numpy~=1.26.4
-pandas~=2.2.3
+pandas
 pydantic~=2.10.3
 pylint
 pymc==5.10.0
 python-multipart
-scikit-learn>=1.6.1
+scikit-learn
 scipy
 six
 starlette
