@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
+
 @router.post("/run")
 def test_models_plots():
     """
@@ -28,7 +29,10 @@ def test_models_plots():
     normal_model_path = os.path.join("app", "model_normal.xgb")
     custom_model_path = os.path.join("app", "model_custom.xgb")
     if not os.path.isfile(normal_model_path) or not os.path.isfile(custom_model_path):
-        raise HTTPException(status_code=400, detail="Model files not found. Please train the models first.")
+        raise HTTPException(
+            status_code=400,
+            detail="Model files not found. Please train the models first.",
+        )
 
     normal_model = xgb.Booster()
     normal_model.load_model(normal_model_path)
@@ -48,14 +52,30 @@ def test_models_plots():
     confusion_path = os.path.join(plots_dir, "confusion_matrices.png")
     accuracies_path = os.path.join(plots_dir, "accuracies.png")
 
-    display_metrics(normal_preds, test_y, is_multiclass, title="Normal XGBoost", output_path=normal_metrics_path)
-    display_metrics(custom_preds, test_y, is_multiclass, title="Bayesian Objective", output_path=custom_metrics_path)
-    plot_label_distributions_side_by_side(test_y, normal_preds, custom_preds, output_path=distribution_path)
-    show_confusion_matrices_side_by_side(test_y, normal_preds, custom_preds, output_path=confusion_path)
+    display_metrics(
+        normal_preds,
+        test_y,
+        is_multiclass,
+        title="Normal XGBoost",
+        output_path=normal_metrics_path,
+    )
+    display_metrics(
+        custom_preds,
+        test_y,
+        is_multiclass,
+        title="Bayesian Objective",
+        output_path=custom_metrics_path,
+    )
+    plot_label_distributions_side_by_side(
+        test_y, normal_preds, custom_preds, output_path=distribution_path
+    )
+    show_confusion_matrices_side_by_side(
+        test_y, normal_preds, custom_preds, output_path=confusion_path
+    )
 
     def load_image_as_base64(file_path: str) -> str:
         with open(file_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
     # Convert saved images to base64 encoded strings.
     normal_metrics_b64 = load_image_as_base64(normal_metrics_path)
@@ -71,6 +91,6 @@ def test_models_plots():
             "metrics_custom": custom_metrics_b64,
             "distribution": distribution_b64,
             "confusion": confusion_b64,
-            "accuracies": accuracies_b64
-        }
+            "accuracies": accuracies_b64,
+        },
     }

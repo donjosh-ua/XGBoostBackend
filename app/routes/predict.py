@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from app.models.xgboost_model import predict_with_model, evaluate_model
-from app.schemas.models import PredictRequest, PredictResponse, EvaluateRequest, EvaluateResponse
+from app.schemas.models import (
+    PredictRequest,
+    PredictResponse,
+    EvaluateRequest,
+    EvaluateResponse,
+)
 
 router = APIRouter()
+
 
 @router.post("/", response_model=PredictResponse)
 async def predict(request: PredictRequest):
@@ -14,6 +20,7 @@ async def predict(request: PredictRequest):
         return {"predictions": predictions.tolist()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/evaluate", response_model=EvaluateResponse)
 async def evaluate(request: EvaluateRequest):

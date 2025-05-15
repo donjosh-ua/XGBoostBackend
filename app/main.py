@@ -7,13 +7,13 @@ from app.routes import predict, data_file, tunning, testing
 app = FastAPI(
     title="XGBoost with FastAPI",
     description="API para entrenar y predecir con modelos XGBoost y ajuste bayesiano.",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Configure CORS
 origins = [
-    "http://localhost:5173",    # frontend url
-    "https://xgboostfrontend.vercel.app"
+    "http://localhost:5173",  # frontend url
+    "https://xgboostfrontend.vercel.app",
 ]
 
 app.add_middleware(
@@ -31,9 +31,11 @@ app.include_router(training.router, prefix="/train", tags=["Entrenamiento"])
 app.include_router(testing.router, prefix="/test", tags=["Testing"])
 app.include_router(predict.router, prefix="/predict", tags=["Predicción"])
 
+
 @app.get("/", tags=["root"])
 def root():
     return {"message": "Bienvenido a la API de XGBoost con FastAPI"}
+
 
 # if __name__ == "__main__":
 #     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -11,7 +11,10 @@ from sklearn.model_selection import GridSearchCV, KFold
 
 kSeed = conf_manager.get_value("kseed")
 
-def train_normal_xgboost(data_path: str, params: dict, method: str = "split", num_folds: int = 5):
+
+def train_normal_xgboost(
+    data_path: str, params: dict, method: str = "split", num_folds: int = 5
+):
     """
     Entrena un modelo XGBoost normal usando split o cross validation.
     """
@@ -25,8 +28,8 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
             params,
             dtrain,
             num_boost_round=rounds,
-            evals=[(dtrain, 'train'), (dtest, 'test')],
-            evals_result=evals_result
+            evals=[(dtrain, "train"), (dtest, "test")],
+            evals_result=evals_result,
         )
         model.save_model("./app/model_normal.xgb")
 
@@ -35,8 +38,10 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
 
         df = pd.read_csv(data_path)
         if df.shape[1] < 2:
-            raise ValueError("El dataset debe tener al menos una columna de características y una etiqueta.")
-        
+            raise ValueError(
+                "El dataset debe tener al menos una columna de características y una etiqueta."
+            )
+
         X = df.iloc[:, :-1].values
         y = df.iloc[:, -1].values
 
@@ -52,12 +57,12 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
             dtest_fold = xgb.DMatrix(X_test, label=y_test)
 
             booster = xgb.train(
-            params,
-            dtrain_fold,
-            num_boost_round=rounds,
-            evals=[(dtrain_fold, 'train'), (dtest_fold, 'test')],
-            evals_result=evals_result
-        )
+                params,
+                dtrain_fold,
+                num_boost_round=rounds,
+                evals=[(dtrain_fold, "train"), (dtest_fold, "test")],
+                evals_result=evals_result,
+            )
 
         booster.save_model("./app/model_custom.xgb")
 
@@ -65,7 +70,14 @@ def train_normal_xgboost(data_path: str, params: dict, method: str = "split", nu
     else:
         raise ValueError("Método de entrenamiento inválido. Use 'split' o 'cv'.")
 
-def train_custom_xgboost(data_path: str, params: dict, distribution: str, method: str = "split", num_folds: int = 5):
+
+def train_custom_xgboost(
+    data_path: str,
+    params: dict,
+    distribution: str,
+    method: str = "split",
+    num_folds: int = 5,
+):
     """
     Entrena un modelo XGBoost con función de pérdida personalizada usando split o validación cruzada.
     Para 'cv', se realizan los entrenamientos en folds para obtener métricas, luego se entrena el modelo final
@@ -75,7 +87,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
     folds = conf_manager.get_value("training_value") if method == "cv" else num_folds
 
     custom_obj = custom_objective_factory()
-    
+
     if method == "split":
         dtrain, dtest, _, _, _, _ = load_data_from_csv()
         evals_result = {}
@@ -85,8 +97,8 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
             dtrain,
             num_boost_round=rounds,
             obj=custom_obj,
-            evals=[(dtrain, 'train'), (dtest, 'test')],
-            evals_result=evals_result
+            evals=[(dtrain, "train"), (dtest, "test")],
+            evals_result=evals_result,
         )
         model.save_model("./app/model_custom.xgb")
         return model, evals_result
@@ -95,8 +107,10 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
 
         df = pd.read_csv(data_path)
         if df.shape[1] < 2:
-            raise ValueError("El dataset debe tener al menos una columna de características y una etiqueta.")
-        
+            raise ValueError(
+                "El dataset debe tener al menos una columna de características y una etiqueta."
+            )
+
         X = df.iloc[:, :-1].values
         y = df.iloc[:, -1].values
 
@@ -117,7 +131,7 @@ def train_custom_xgboost(data_path: str, params: dict, distribution: str, method
                 num_boost_round=rounds,
                 obj=custom_obj,
                 evals=[(dtrain_fold, "train"), (dtest_fold, "test")],
-                evals_result=evals_result
+                evals_result=evals_result,
             )
 
         booster.save_model("./app/model_custom.xgb")
@@ -136,6 +150,7 @@ def predict_with_model(model_path: str, data_path: str):
 
     return model.predict(dtest)
 
+
 def evaluate_model(model_path: str, data_path: str):
     """
     Evalúa un modelo XGBoost.
@@ -147,15 +162,25 @@ def evaluate_model(model_path: str, data_path: str):
     # Calcular métricas (accuracy, precision, recall, F1) aquí se retornan valores fijos como ejemplo
     return {"accuracy": 0.95, "precision": 0.94, "recall": 0.93, "f1": 0.94}
 
-def cross_validate(X: np.ndarray, y: np.ndarray, params: dict, n_splits: int = 5, is_multiclass: bool = False, distribution: str = None):
+
+def cross_validate(
+    X: np.ndarray,
+    y: np.ndarray,
+    params: dict,
+    n_splits: int = 5,
+    is_multiclass: bool = False,
+    distribution: str = None,
+):
     """
     Realiza validación cruzada usando el modelo XGBoost normal.
     Si se especifica una distribución se lanza un error ya que la validación cruzada con objetivo personalizado no es soportada.
     Calcula métricas de accuracy, precision, recall y F1 para cada fold.
     """
     if distribution is not None:
-        raise ValueError("El entrenamiento con objetivo personalizado no es soportado en cross_validation.")
-    
+        raise ValueError(
+            "El entrenamiento con objetivo personalizado no es soportado en cross_validation."
+        )
+
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=kSeed)
     accuracies, precisions, recalls, f1s = [], [], [], []
 
@@ -169,7 +194,13 @@ def cross_validate(X: np.ndarray, y: np.ndarray, params: dict, n_splits: int = 5
 
         # Entrenar modelo normal
         evals_result = {}
-        booster = xgb.train(params, dtrain_fold, num_boost_round=50, evals=[(dtest_fold, "test")], evals_result=evals_result)
+        booster = xgb.train(
+            params,
+            dtrain_fold,
+            num_boost_round=50,
+            evals=[(dtest_fold, "test")],
+            evals_result=evals_result,
+        )
 
         # Realizar predicciones
         preds = booster.predict(dtest_fold)
@@ -186,8 +217,9 @@ def cross_validate(X: np.ndarray, y: np.ndarray, params: dict, n_splits: int = 5
         "accuracy": np.mean(accuracies),
         "precision": np.mean(precisions),
         "recall": np.mean(recalls),
-        "f1": np.mean(f1s)
+        "f1": np.mean(f1s),
     }
+
 
 def grid_search_xgboost():
 
@@ -207,19 +239,19 @@ def grid_search_xgboost():
 
     # Parametros reducidos para acelerar el proceso
     param_grid = {
-        'max_depth': [3, 5],
-        'learning_rate': [0.01, 0.1],
-        'gamma': [0.01, 0.1],
-        'eta': [0.01, 0.05],
-        'subsample': [0.7, 0.8],
-        'colsample_bytree': [0.7, 0.8],
-        'min_child_weight': [1, 3],
-        'scale_pos_weight': [1, 3]
+        "max_depth": [3, 5],
+        "learning_rate": [0.01, 0.1],
+        "gamma": [0.01, 0.1],
+        "eta": [0.01, 0.05],
+        "subsample": [0.7, 0.8],
+        "colsample_bytree": [0.7, 0.8],
+        "min_child_weight": [1, 3],
+        "scale_pos_weight": [1, 3],
     }
 
     # Convertir los datos a DMatrix
-    model = xgb.XGBClassifier(objective='binary:logistic', seed=kSeed)
-    
+    model = xgb.XGBClassifier(objective="binary:logistic", seed=kSeed)
+
     grid_search = GridSearchCV(model, param_grid, cv=3, n_jobs=-1, verbose=1)
     grid_search.fit(train_x, train_y)
     params = grid_search.best_params_

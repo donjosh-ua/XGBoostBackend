@@ -3,6 +3,7 @@ import xgboost as xgb
 from app.utils import conf_manager
 from sklearn.model_selection import train_test_split
 
+
 def load_data_from_csv() -> tuple:
     """
     Load data from the CSV file specified in the settings file and split it into training and test sets.
@@ -14,15 +15,17 @@ def load_data_from_csv() -> tuple:
     """
     datafile = conf_manager.get_value("loaded_data_path")
     if not datafile:
-        print("No data file loaded. Please load a data file first using the /load endpoint.")
-    
+        print(
+            "No data file loaded. Please load a data file first using the /load endpoint."
+        )
+
     # Load train_ratio and seed from settings, with defaults if not set.
     train_ratio = conf_manager.get_value("training_value")
     if train_ratio is None or train_ratio >= 1:
         train_ratio = 0.7  # default training ratio
-    
+
     header = conf_manager.get_value("has_header")
-    header = 0 if header else None 
+    header = 0 if header else None
 
     seed = conf_manager.get_value("kseed")  # default random seed
 
@@ -44,11 +47,13 @@ def gen_test_data():
 
     datafile = conf_manager.get_value("loaded_data_path")
     if not datafile:
-        print("No data file loaded. Please load a data file first using the /load endpoint.")
-    
+        print(
+            "No data file loaded. Please load a data file first using the /load endpoint."
+        )
+
     # Load train_ratio and seed from settings, with defaults if not set.
     train_ratio = 0.7  # default training ratio
-    
+
     header = conf_manager.get_value("has_header")
     if header is not None:
         header = 0  # default header
