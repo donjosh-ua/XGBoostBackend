@@ -58,7 +58,7 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
         adjustment = dist_func("adjustment", params, shape=shape)
         adjusted_logits = preds + adjustment
 
-        trace = pm.sample(500, tune=500, chains=2, cores=2, progressbar=True)
+        trace = pm.sample(500, tune=500, chains=2, cores=4, progressbar=False)
         # trace = pm.sample(1000, return_inferencedata=False, progressbar=False)
 
         if is_multiclass:
