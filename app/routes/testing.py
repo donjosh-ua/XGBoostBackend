@@ -4,7 +4,8 @@ import numpy as np
 import xgboost as xgb
 from app.utils.common_methods import *
 from app.utils.data_loader import load_data_from_csv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 
 router = APIRouter()
 
@@ -94,3 +95,34 @@ def test_models_plots():
             "accuracies": accuracies_b64,
         },
     }
+
+
+@router.get("/download/{model_type}")
+async def download_model(model_type):
+    """
+    Downloads a trained XGBoost model.
+
+    Args:
+        model_type: Type of model to download - 'normal' for standard XGBoost or 'custom' for PyMC-adjusted model
+
+    Returns:
+        The model file as a downloadable attachment
+    """
+    # model_type = "custom"
+    if model_type not in ["normal", "custom"]:
+        raise HTTPException(
+            status_code=400, detail="Invalid model type. Use 'normal' or 'custom'"
+        )
+
+    model_path = f"./app/model_{model_type}.xgb"
+
+    if not os.path.exists(model_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model file not found. Please train the {model_type} model first.",
+        )
+
+    filename = f"xgboost_{model_type}_model.xgb"
+    return FileResponse(
+        path=model_path, filename=filename, media_type="application/octet-stream"
+    )

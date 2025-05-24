@@ -1,4 +1,4 @@
-# import uvicorn
+import uvicorn
 from fastapi import FastAPI
 from app.routes import training
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,6 +37,6 @@ def root():
     return {"message": "Bienvenido a la API de XGBoost con FastAPI"}
 
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8080, reload=True)
 # uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
