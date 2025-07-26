@@ -1,3 +1,4 @@
+from importlib.metadata import distribution
 import os
 from pydantic import BaseModel
 from app.utils import conf_manager
@@ -13,7 +14,7 @@ class TrainRequest(BaseModel):
     method: str  # "split" or "cv"
     value: int  # if method=="cv", value represents num_folds; for "split", a default is used
     rounds: int  # number of rounds for custom training
-    distribution: str = None  # used for custom training
+    distribution: str = ""  # used for custom training
     params: dict  # additional parameters if needed
 
 
@@ -30,6 +31,12 @@ def get_selected_filepath() -> str:
     if loaded_data_path and not os.path.isabs(loaded_data_path):
         base_dir = os.path.abspath(os.curdir)
         return os.path.join(base_dir, loaded_data_path)
+
+    if not loaded_data_path:
+        raise HTTPException(
+            status_code=400,
+            detail="No data file has been loaded. Please load a data file first.",
+        )
 
     return loaded_data_path
 
@@ -50,7 +57,13 @@ async def train_normal_model(request: TrainRequest):
         # Retrieve model parameters from the settings file
         model_params = conf_manager.get_value("model_parameters")
 
-        _, evals_result = train_normal_xgboost(data_path, model_params, request.method)
+        if not model_params:
+            raise HTTPException(
+                status_code=400,
+                detail="No model parameters found",
+            )
+
+        _, _ = train_normal_xgboost(data_path, model_params, request.method)
 
         print("Model trained successfully")
         return {"message": "Modelo entrenado exitosamente"}
@@ -78,12 +91,18 @@ async def train_custom_model(request: TrainRequest):
         # Retrieve custom parameters from the settings file
         model_params = conf_manager.get_value("model_parameters")
 
+        if not model_params:
+            raise HTTPException(
+                status_code=400,
+                detail="No model parameters found in settings.config.",
+            )
+
         if request.method.lower() != "split":
             raise HTTPException(
                 status_code=400,
                 detail="El entrenamiento custom solo está soportado con el método 'split'.",
             )
-        _, evals_result = train_custom_xgboost(
+        _, _ = train_custom_xgboost(
             data_path, model_params, request.distribution, request.method
         )
 
@@ -110,6 +129,12 @@ async def train_both_models(request: TrainRequest):
 
         model_params = conf_manager.get_value("model_parameters")
 
+        if not model_params:
+            raise HTTPException(
+                status_code=400,
+                detail="No model parameters found in settings.config.",
+            )
+
         _, normal_results = train_normal_xgboost(
             data_path, model_params, request.method
         )
@@ -117,7 +142,6 @@ async def train_both_models(request: TrainRequest):
             data_path, model_params, request.distribution, request.method
         )
 
-        # BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
         plots_dir = os.path.join("app", "data", "plots")
         if not os.path.exists(plots_dir):
             os.makedirs(plots_dir)
