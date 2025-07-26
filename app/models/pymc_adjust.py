@@ -12,62 +12,89 @@ def get_config_params():
 
     def parse_vector(val):
         if val is None:
-            return None
+            return np.array([])
         if isinstance(val, str):
             val = val.strip()
             if val == "":
-                return None
+                return np.array([])
             return np.array([float(x) for x in val.split(",")])
         if isinstance(val, (list, tuple, np.ndarray)):
             return np.array(val)
-        return val
+        return np.array([val])
 
     for key in ["alpha_vector", "p_vector", "weights", "means", "sigmas"]:
         if key in custom_params:
             custom_params[key] = parse_vector(custom_params[key])
 
-    distribution_params = {
-        "Normal": {"mu": custom_params["mean"], "sigma": custom_params["sigma"]},
-        "HalfNormal": {"sigma": custom_params["sigma"]},
-        "Cauchy": {"alpha": custom_params["alpha"], "beta": custom_params["beta"]},
-        "Exponential": {"lam": custom_params["lambda"]},
-        "Beta": {"alpha": custom_params["alpha"], "beta": custom_params["beta"]},
-        "ChiSquared": {"nu": custom_params["nu"]},
+    distribution_params: dict = {
+        "Normal": {
+            "mu": custom_params.get("mean", 0),
+            "sigma": custom_params.get("sigma", 1),
+        },
+        "HalfNormal": {"sigma": custom_params.get("sigma", 1)},
+        "Cauchy": {
+            "alpha": custom_params.get("alpha", 1),
+            "beta": custom_params.get("beta", 1),
+        },
+        "Exponential": {"lam": custom_params.get("lambda", 1)},
+        "Beta": {
+            "alpha": custom_params.get("alpha", 1),
+            "beta": custom_params.get("beta", 1),
+        },
+        "ChiSquared": {"nu": custom_params.get("nu", 1)},
         "ExGaussian": {
-            "mu": custom_params["mu"],
-            "sigma": custom_params["sigma"],
-            "nu": custom_params["nu"],
+            "mu": custom_params.get("mu", 0),
+            "sigma": custom_params.get("sigma", 1),
+            "nu": custom_params.get("nu", 1),
         },
-        "Gamma": {"alpha": custom_params["alpha"], "beta": custom_params["beta"]},
-        "Logistic": {"mu": custom_params["mu"], "s": custom_params["scale"]},
-        "LogNormal": {"mu": custom_params["mu"], "sigma": custom_params["sigma"]},
-        "Uniform": {"lower": custom_params["lower"], "upper": custom_params["upper"]},
-        "Weibull": {"alpha": custom_params["alpha"], "beta": custom_params["beta"]},
-        "Bernoulli": {"p": custom_params["p"]},
-        "Binomial": {"n": custom_params["n"], "p": custom_params["p"]},
+        "Gamma": {
+            "alpha": custom_params.get("alpha", 1),
+            "beta": custom_params.get("beta", 1),
+        },
+        "Logistic": {
+            "mu": custom_params.get("mu", 0),
+            "s": custom_params.get("scale", 1),
+        },
+        "LogNormal": {
+            "mu": custom_params.get("mu", 0),
+            "sigma": custom_params.get("sigma", 1),
+        },
+        "Uniform": {
+            "lower": custom_params.get("lower", 0),
+            "upper": custom_params.get("upper", 1),
+        },
+        "Weibull": {
+            "alpha": custom_params.get("alpha", 1),
+            "beta": custom_params.get("beta", 1),
+        },
+        "Bernoulli": {"p": custom_params.get("p", 0.5)},
+        "Binomial": {"n": custom_params.get("n", 1), "p": custom_params.get("p", 0.5)},
         "BetaBinomial": {
-            "alpha": custom_params["alpha"],
-            "beta": custom_params["beta"],
-            "n": custom_params["n"],
+            "alpha": custom_params.get("alpha", 1),
+            "beta": custom_params.get("beta", 1),
+            "n": custom_params.get("n", 1),
         },
-        "Categorical": {"p": custom_params["p"]},
-        "Poisson": {"mu": custom_params["mu"]},
-        "Dirichlet": {"a": custom_params["alpha_vector"]},
+        "Categorical": {"p": custom_params.get("p", 0.5)},
+        "Poisson": {"mu": custom_params.get("mu", 1)},
+        "Dirichlet": {"a": custom_params.get("alpha_vector", np.array([1.0]))},
         "DirichletMultinomial": {
-            "a": custom_params["alpha_vector"],
-            "n": custom_params["n"],
+            "a": custom_params.get("alpha_vector", np.array([1.0])),
+            "n": custom_params.get("n", 1),
         },
-        "Multinomial": {"n": custom_params["n"], "p": custom_params["p_vector"]},
+        "Multinomial": {
+            "n": custom_params.get("n", 1),
+            "p": custom_params.get("p_vector", np.array([1.0])),
+        },
         "NormalMixture": {
-            "w": custom_params["weights"],
-            "mus": custom_params["means"],
-            "sigmas": custom_params["sigmas"],
+            "w": custom_params.get("weights", np.array([1.0])),
+            "mus": custom_params.get("means", np.array([0.0])),
+            "sigmas": custom_params.get("sigmas", np.array([1.0])),
         },
-        "GaussianRandomWalk": {"sigma": custom_params["sigma"]},
+        "GaussianRandomWalk": {"sigma": custom_params.get("sigma", 1)},
         "AR1": {
-            "k": custom_params["k"],
-            "tau": custom_params["tau"],
-            "rho": custom_params["rho"],
+            "k": custom_params.get("k", 0),
+            "tau": custom_params.get("tau", 1),
+            "rho": custom_params.get("rho", 0),
         },
     }
 
@@ -82,6 +109,13 @@ def get_config_params():
 
     params = distribution_params[distribution]
 
+    if distribution == "Dirichlet":
+        a = params["a"]
+        if not isinstance(a, np.ndarray) or a.ndim != 1 or np.any(a <= 0):
+            raise ValueError(
+                "Dirichlet 'a' parameter must be a 1D array of positive floats."
+            )
+
     return params
 
 
@@ -93,6 +127,9 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
     preds = np.array(preds)
     params = get_config_params()
     distribution = conf_manager.get_value("distribution")
+
+    if distribution is None:
+        raise ValueError("No distribution specified in config.")
 
     # Mapeo de distribuciones
     distributions = {
@@ -183,20 +220,19 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
 
     with pm.Model() as _:
 
-        adjustment = dist_func("adjustment", params, shape=shape)
-        adjusted_logits = preds + adjustment
+        dist_func("adjustment", params, shape=shape)
 
         trace = pm.sample(500, tune=500, chains=2, cores=4, progressbar=False)
 
         if is_multiclass:
             adjustment_samples = (
-                trace.posterior["adjustment"].mean(dim=("chain", "draw")).values
+                trace.posterior["adjustment"].mean(dim=("chain", "draw")).values  # type: ignore
             )
             adjusted_logits = preds + adjustment_samples
             exp_vals = np.exp(adjusted_logits)
             adjusted_preds = exp_vals / np.sum(exp_vals, axis=1, keepdims=True)
         else:
-            adjustment_samples = trace.posterior["adjustment"].mean().values
+            adjustment_samples = trace.posterior["adjustment"].mean().values  # type: ignore
             adjusted_logits = preds + adjustment_samples
             adjusted_preds = expit(adjusted_logits)
 
