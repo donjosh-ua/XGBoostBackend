@@ -20,6 +20,8 @@ def train_normal_xgboost(
     """
     rounds = conf_manager.get_value("rounds")
     folds = conf_manager.get_value("training_value") if method == "cv" else num_folds
+    if not folds:
+        raise ValueError("Número de folds no válido.")
 
     if method == "split":
         dtrain, dtest, _, _, _, _ = load_data_from_csv()
@@ -64,7 +66,8 @@ def train_normal_xgboost(
                 evals_result=evals_result,
             )
 
-        booster.save_model("./app/model_custom.xgb")
+        if booster is not None:
+            booster.save_model("./app/model_custom.xgb")
 
         return booster, evals_result
     else:
@@ -85,6 +88,9 @@ def train_custom_xgboost(
     """
     rounds = conf_manager.get_value("rounds")
     folds = conf_manager.get_value("training_value") if method == "cv" else num_folds
+
+    if not folds:
+        raise ValueError("Número de folds no válido.")
 
     custom_obj = custom_objective_factory()
 
@@ -134,7 +140,8 @@ def train_custom_xgboost(
                 evals_result=evals_result,
             )
 
-        booster.save_model("./app/model_custom.xgb")
+        if booster is not None:
+            booster.save_model("./app/model_custom.xgb")
 
         return booster, evals_result
     else:
@@ -157,7 +164,6 @@ def evaluate_model(model_path: str, data_path: str):
     """
     model = xgb.Booster(model_file=model_path)
     dtest = xgb.DMatrix(data_path)
-    predictions = model.predict(dtest)
 
     # Calcular métricas (accuracy, precision, recall, F1) aquí se retornan valores fijos como ejemplo
     return {"accuracy": 0.95, "precision": 0.94, "recall": 0.93, "f1": 0.94}
@@ -169,7 +175,7 @@ def cross_validate(
     params: dict,
     n_splits: int = 5,
     is_multiclass: bool = False,
-    distribution: str = None,
+    distribution: str = "",
 ):
     """
     Realiza validación cruzada usando el modelo XGBoost normal.
