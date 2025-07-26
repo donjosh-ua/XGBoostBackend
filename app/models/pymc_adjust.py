@@ -124,10 +124,10 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
     Ajusta las predicciones con PyMC de forma genérica usando la distribución seleccionada.
     Soporta binario (1D) o multiclass (2D) aplicando logistic o softmax.
     """
+
     preds = np.array(preds)
     params = get_config_params()
     distribution = conf_manager.get_value("distribution")
-
     if distribution is None:
         raise ValueError("No distribution specified in config.")
 
@@ -210,7 +210,6 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
         ),
     }
 
-    # Detección de binario o multiclass
     is_multiclass = preds.ndim > 1
     shape = preds.shape[1] if is_multiclass else None
 
