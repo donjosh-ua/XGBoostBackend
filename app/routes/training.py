@@ -12,6 +12,7 @@ router = APIRouter()
 
 class TrainRequest(BaseModel):
     method: str  # "split" or "cv"
+    markov: bool  # used for custom training
     value: int  # if method=="cv", value represents num_folds; for "split", a default is used
     rounds: int  # number of rounds for custom training
     distribution: str = ""  # used for custom training
@@ -125,6 +126,7 @@ async def train_both_models(request: TrainRequest):
         conf_manager.set_value("training_value", value)
         conf_manager.set_value("rounds", request.rounds)
         conf_manager.set_value("distribution", request.distribution)
+        conf_manager.set_value("markov", request.markov)
         conf_manager.set_value("custom_parameters", request.params)
 
         model_params = conf_manager.get_value("model_parameters")

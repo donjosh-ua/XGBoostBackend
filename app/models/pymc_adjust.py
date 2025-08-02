@@ -223,8 +223,10 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
         adjusted_logits = preds + adjustment
 
         if conf_manager.get_value("markov"):
+            print("Using NUTS sampler for Markov adjustment")
             pm.NUTS()
         else:
+            print("Using ADVI sampler for adjustment")
             pm.fit(n=1000, method="advi", progressbar=False)
 
         trace = pm.sample(500, tune=500, chains=2, cores=4, progressbar=False)
