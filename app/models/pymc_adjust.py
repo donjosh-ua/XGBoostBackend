@@ -219,7 +219,13 @@ def apply_pymc_adjustment(preds: np.ndarray) -> np.ndarray:
 
     with pm.Model() as _:
 
-        dist_func("adjustment", params, shape=shape)
+        adjustment = dist_func("adjustment", params, shape=shape)
+        adjusted_logits = preds + adjustment
+
+        if conf_manager.get_value("markov"):
+            pm.NUTS()
+        else:
+            pm.fit(n=1000, method="advi", progressbar=False)
 
         trace = pm.sample(500, tune=500, chains=2, cores=4, progressbar=False)
 
