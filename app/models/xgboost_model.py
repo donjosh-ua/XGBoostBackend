@@ -67,7 +67,7 @@ def train_normal_xgboost(
             )
 
         if booster is not None:
-            booster.save_model("./app/model_custom.xgb")
+            booster.save_model("./app/model_normal.xgb")
 
         return booster, evals_result
     else:
